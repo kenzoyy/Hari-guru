@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Hari Guru, Pak Syamsul — Terima Kasih Pelita Ilmu</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Playfair Display (Elegan) & Plus Jakarta Sans (Modern) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tone.js untuk Musik Instrumental Tanpa URL Eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- Canvas Confetti untuk Efek Perayaan -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        amber: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            800: '#92400e',
+                            900: '#78350f',
+                        },
+                        emerald: {
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-amber-50/40 text-slate-800 font-sans antialiased selection:bg-amber-200 selection:text-amber-900 overflow-x-hidden">
+
+    <!-- Toast Notification Custom (Pengganti alert()) -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700 max-w-sm">
+        <i data-lucide="sparkles" class="w-5 h-5 text-amber-400 shrink-0"></i>
+        <p id="toast-message" class="text-sm font-medium">Pesan notifikasi</p>
+    </div>
+
+    <!-- Floating Music Controller (Melodi Hymne Guru & Nada Kasih Sayang) -->
+    <div class="fixed bottom-5 right-5 z-40 flex flex-col sm:flex-row items-end sm:items-center gap-2 bg-white/95 backdrop-blur-md p-2.5 sm:pr-4 rounded-3xl sm:rounded-full shadow-xl border border-amber-200/90 transition-transform hover:scale-[1.02]">
+        <div class="flex items-center gap-2.5">
+            <button id="music-toggle-btn" onclick="toggleMusic()" class="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-600 to-amber-500 text-white flex items-center justify-center shadow-md hover:from-amber-700 hover:to-amber-600 transition-all focus:outline-none shrink-0" aria-label="Putar atau Jeda Lagu">
+                <i id="music-icon" data-lucide="play" class="w-5 h-5 ml-0.5"></i>
+            </button>
+            <div class="text-left pr-2">
+                <p id="music-title" class="text-xs font-bold text-slate-800 leading-tight">Hymne Guru (Piano)</p>
+                <p id="music-status" class="text-[11px] text-amber-700 font-medium">Klik untuk memutar melodi</p>
+            </div>
+            <!-- Equalizer Bars -->
+            <div id="equalizer" class="hidden items-end gap-0.5 h-4 mr-1">
+                <span class="w-1 bg-amber-500 rounded-full animate-bounce h-2" style="animation-delay: 0.1s"></span>
+                <span class="w-1 bg-amber-500 rounded-full animate-bounce h-4" style="animation-delay: 0.3s"></span>
+                <span class="w-1 bg-amber-500 rounded-full animate-bounce h-3" style="animation-delay: 0.2s"></span>
+            </div>
+        </div>
+        <button onclick="switchMelody()" class="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/80 transition-colors flex items-center gap-1" title="Ganti Melodi Instrumental">
+            <i data-lucide="repeat" class="w-3.5 h-3.5"></i>
+            <span>Ganti Nada</span>
+        </button>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-amber-100">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-serif font-bold text-xl border border-amber-200">
+                    S
+                </div>
+                <span class="font-serif font-bold text-lg text-slate-900 tracking-tight">Untuk <span class="text-amber-600">Pak Syamsul</span></span>
+            </div>
+            <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+                <a href="#surat" class="hover:text-amber-600 transition-colors">Surat Pak Syamsul</a>
+                <a href="#makna-hari-guru" class="hover:text-amber-600 transition-colors">Makna Hari Guru</a>
+                <a href="#kejutan" class="hover:text-amber-600 transition-colors">Kapsul Apresiasi</a>
+                <a href="#filosofi" class="hover:text-amber-600 transition-colors">Jejak Dedikasi</a>
+                <a href="#terima-kasih-halaman" class="hover:text-amber-600 transition-colors">Halaman Terima Kasih</a>
+                <a href="#ucapan" class="hover:text-amber-600 transition-colors">Ucapan Indah</a>
+            </div>
+            <button onclick="triggerCelebration()" class="px-4 py-2 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 active:scale-95">
+                <i data-lucide="party-popper" class="w-4 h-4 text-amber-600"></i>
+                <span>Rayakan!</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-12 pb-20 sm:pt-20 sm:pb-28 px-4 sm:px-6 overflow-hidden">
+        <!-- Dekorasi Latar -->
+        <div class="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-amber-200/35 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+        
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-amber-200 shadow-sm text-amber-800 text-xs sm:text-sm font-semibold mb-6 animate-float">
+                <i data-lucide="award" class="w-4 h-4 text-amber-500"></i>
+                <span>Edisi Spesial Hari Guru — Untuk Pak Syamsul</span>
+            </div>
+            
+            <h1 class="font-serif text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 leading-tight mb-6">
+                Selamat Hari Guru, <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 italic">Pak Syamsul</span><br class="hidden sm:block" />
+                Pelita Ilmu &amp; Teladan Kami
+            </h1>
+            
+            <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-10">
+                Halaman ini hadir khusus sebagai bentuk terima kasih tulus untuk <strong>Pak Syamsul</strong>—atas ilmu yang menumbuhkan, nasihat yang menguatkan, dan keteladanan yang selalu kami kenang sepanjang hayat.
+            </p>
+            
+            <!-- Interactive Action Buttons -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 flex-wrap">
+                <button onclick="sendVirtualFlower()" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-semibold shadow-lg shadow-amber-600/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                    <i data-lucide="flower-2" class="w-5 h-5"></i>
+                    <span>Kirim Bunga ke Pak Syamsul</span>
+                    <span id="flower-count" class="ml-1 px-2 py-0.5 text-xs bg-white/20 rounded-full">1,248</span>
+                </button>
+                
+                <a href="#makna-hari-guru" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-900/15 transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="book-open" class="w-4 h-4 text-amber-200"></i>
+                    <span>Jelajahi Halaman Hari Guru</span>
+                </a>
+
+                <a href="#ucapan" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white hover:bg-amber-50 text-slate-800 font-semibold border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-600"></i>
+                    <span>Lihat Ucapan Indah</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Halaman Konten 1: Makna Hari Guru & Penghormatan -->
+    <section id="makna-hari-guru" class="py-16 px-4 sm:px-6 bg-white border-y border-amber-100">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">Halaman Hari Guru</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-slate-900 mb-3">Mengapa Hari Guru Begitu Berarti?</h2>
+                <p class="text-slate-600 text-sm sm:text-base">Hari Guru adalah momentum istimewa untuk mengenang jasa para pendidik seperti <strong>Pak Syamsul</strong> yang menyalakan cahaya pengetahuan di setiap generasi.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-amber-50/60 p-7 rounded-3xl border border-amber-200/70">
+                    <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center mb-4">
+                        <i data-lucide="sun" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Cahaya di Tengah Gelap</h3>
+                    <p class="text-sm text-slate-700 leading-relaxed">
+                        Ketidaktahuan sering kali membuat langkah terasa ragu. Melalui bimbingan Pak Syamsul, setiap konsep yang rumit menjadi terang, terarah, dan mudah dipahami.
+                    </p>
+                </div>
+
+                <div class="bg-emerald-50/60 p-7 rounded-3xl border border-emerald-200/70">
+                    <div class="w-11 h-11 rounded-2xl bg-emerald-700 text-white flex items-center justify-center mb-4">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Jembatan Masa Depan</h3>
+                    <p class="text-sm text-slate-700 leading-relaxed">
+                        Setiap cita-cita yang tumbuh di hati murid berawal dari ruang belajar yang dirawat dengan kesabaran, disiplin, dan dorongan semangat dari seorang guru.
+                    </p>
+                </div>
+
+                <div class="bg-sky-50/60 p-7 rounded-3xl border border-sky-200/70">
+                    <div class="w-11 h-11 rounded-2xl bg-sky-700 text-white flex items-center justify-center mb-4">
+                        <i data-lucide="infinity" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Jejak yang Tak Pernah Padam</h3>
+                    <p class="text-sm text-slate-700 leading-relaxed">
+                        Meskipun waktu terus berjalan dan usia bertambah, nasihat serta keteladanan Pak Syamsul tetap hidup dan membimbing keputusan penting kami.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 1: Surat Terima Kasih Khusus Pak Syamsul -->
+    <section id="surat" class="py-16 px-4 sm:px-6">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl shadow-amber-900/5 border border-amber-100 relative overflow-hidden">
+                <!-- Aksen Sudut -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-bl-full -z-0"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                <i data-lucide="mail-open" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-serif text-xl sm:text-2xl font-bold text-slate-900">Sepucuk Surat Untuk Pak Syamsul</h2>
+                                <p class="text-xs text-slate-500">Ucapan tulus yang tak pernah lekang oleh waktu</p>
+                            </div>
+                        </div>
+                        <button onclick="readLetterAloud()" class="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 text-slate-600 hover:text-amber-700 transition-colors border border-slate-200" title="Bacakan Surat (Suara)">
+                            <i data-lucide="volume-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div id="letter-content" class="space-y-4 text-slate-700 leading-relaxed text-sm sm:text-base">
+                        <p class="font-medium text-slate-900">Yang terhormat, Pak Syamsul,</p>
+                        <p>
+                            Terima kasih atas setiap waktu, kesabaran, dan ilmu yang telah Pak Syamsul curahkan dengan penuh ketulusan. Di balik setiap pelajaran yang disampaikan, tersimpan bimbingan hidup yang membuat kami lebih bijak melangkah.
+                        </p>
+                        <p>
+                            Pak Syamsul bukan sekadar pengajar di ruang kelas, melainkan sosok panutan yang menumbuhkan rasa percaya diri, kejujuran, dan semangat untuk terus belajar tanpa mudah menyerah.
+                        </p>
+                        <p class="italic font-serif text-amber-800 pt-2">
+                            "Semoga setiap ilmu yang Pak Syamsul tanamkan berbuah kebaikan berlipat ganda, serta selalu dikaruniai kesehatan, umur panjang penuh berkah, dan kebahagiaan."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Halaman Konten 2: Halaman Khusus Ucapan Terima Kasih Mendalam -->
+    <section id="terima-kasih-halaman" class="py-16 px-4 sm:px-6 bg-gradient-to-br from-emerald-950 via-slate-900 to-amber-950 text-white">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-bold uppercase tracking-wider mb-2">Halaman Terima Kasih</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-amber-100 mb-3">Terima Kasih, Pak Syamsul, Atas Segalanya</h2>
+                <p class="text-slate-300 text-sm sm:text-base">Kata terima kasih mungkin tak pernah cukup untuk membalas ketulusan Pak Syamsul, namun setiap lembar rasa syukur ini kami persembahkan sepenuh hati.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-7">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i data-lucide="clock" class="w-5 h-5 text-amber-400"></i>
+                        <h3 class="font-serif text-xl font-bold text-amber-200">Terima Kasih atas Waktu &amp; Kesabaran</h3>
+                    </div>
+                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+                        Terima kasih telah meluangkan waktu tanpa lelah, mengulang penjelasan dengan sabar, dan mendengarkan setiap proses belajar kami tanpa tergesa-gesa.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-7">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i data-lucide="message-circle-heart" class="w-5 h-5 text-amber-400"></i>
+                        <h3 class="font-serif text-xl font-bold text-amber-200">Terima Kasih atas Nasihat Kehidupan</h3>
+                    </div>
+                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+                        Pesan-pesan bijak Pak Syamsul tidak hanya berguna di bangku sekolah, tetapi juga menjadi pengingat berharga tentang arti rendah hati, tanggung jawab, dan integritas.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-7">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i data-lucide="flame" class="w-5 h-5 text-amber-400"></i>
+                        <h3 class="font-serif text-xl font-bold text-amber-200">Terima Kasih atas Semangat yang Dinyalakan</h3>
+                    </div>
+                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+                        Saat kami ragu pada kemampuan diri sendiri, keyakinan dan dorongan dari Pak Syamsul membuat kami berani melangkah lebih jauh dan percaya pada potensi diri.
+                    </p>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-7">
+                    <div class="flex items-center gap-3 mb-3">
+                        <i data-lucide="heart" class="w-5 h-5 text-amber-400"></i>
+                        <h3 class="font-serif text-xl font-bold text-amber-200">Terima Kasih atas Doa yang Mengiringi</h3>
+                    </div>
+                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed">
+                        Kami percaya doa tulus seorang guru adalah salah satu penguat terbesar dalam perjalanan hidup murid-muridnya. Terima kasih atas segala doa baik untuk kami.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 1.5: Kapsul Penghargaan & Kejutan untuk Pak Syamsul -->
+    <section id="kejutan" class="py-14 px-4 sm:px-6 bg-amber-50/70 border-y border-amber-200/60">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider mb-2">Kejutan Spesial</span>
+                <h2 class="font-serif text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Tiga Kapsul Apresiasi Pak Syamsul</h2>
+                <p class="text-slate-600 text-sm sm:text-base">Klik masing-masing kapsul untuk membuka penghargaan &amp; doa khusus untuk Pak Syamsul.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Kapsul 1 -->
+                <button onclick="revealCapsule(this, 'Gelar Kehormatan: Guru Teladan Sepanjang Masa', 'Terima kasih Pak Syamsul atas sikap tenang, adil, dan penuh wibawa yang selalu menginspirasi kami setiap hari.')" class="text-left bg-white p-6 rounded-3xl border-2 border-dashed border-amber-300 hover:border-amber-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="gift" class="w-6 h-6"></i>
+                        </span>
+                        <span class="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full capsule-badge">Klik Buka</span>
+                    </div>
+                    <h3 class="font-serif text-lg font-bold text-slate-900 capsule-title">Kapsul #1: Teladan Sikap</h3>
+                    <p class="text-sm text-slate-500 mt-1 capsule-body">Ketuk untuk membuka pesan apresiasi pertama untuk Pak Syamsul.</p>
+                </button>
+
+                <!-- Kapsul 2 -->
+                <button onclick="revealCapsule(this, 'Gelar Kehormatan: Penyalur Ilmu Penuh Berkah', 'Setiap penjelasan Pak Syamsul yang jernih dan sabar telah membuka banyak pintu pemahaman bagi kami.')" class="text-left bg-white p-6 rounded-3xl border-2 border-dashed border-emerald-300 hover:border-emerald-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="sparkles" class="w-6 h-6"></i>
+                        </span>
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full capsule-badge">Klik Buka</span>
+                    </div>
+                    <h3 class="font-serif text-lg font-bold text-slate-900 capsule-title">Kapsul #2: Cahaya Ilmu</h3>
+                    <p class="text-sm text-slate-500 mt-1 capsule-body">Ketuk untuk membuka pesan apresiasi kedua untuk Pak Syamsul.</p>
+                </button>
+
+                <!-- Kapsul 3 -->
+                <button onclick="revealCapsule(this, 'Doa Terbaik: Sehat, Bahagia & Penuh Ridha', 'Semoga Pak Syamsul beserta keluarga senantiasa dilimpahi kesehatan prima, ketenangan hati, dan rezeki yang barokah. Aamiin.')" class="text-left bg-white p-6 rounded-3xl border-2 border-dashed border-rose-300 hover:border-rose-500 hover:shadow-lg transition-all group">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i data-lucide="heart" class="w-6 h-6"></i>
+                        </span>
+                        <span class="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full capsule-badge">Klik Buka</span>
+                    </div>
+                    <h3 class="font-serif text-lg font-bold text-slate-900 capsule-title">Kapsul #3: Doa &amp; Kesehatan</h3>
+                    <p class="text-sm text-slate-500 mt-1 capsule-body">Ketuk untuk membuka doa khusus bagi Pak Syamsul.</p>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Kartu Interaktif "Klik untuk Membuka Makna" -->
+    <section id="filosofi" class="py-16 px-4 sm:px-6 bg-white border-y border-amber-100/80">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <h2 class="font-serif text-3xl font-bold text-slate-900 mb-3">Empat Pilar Ketulusan Guru</h2>
+                <p class="text-slate-600 text-sm sm:text-base">Sentuh atau klik setiap kartu di bawah ini untuk melihat pesan tersembunyi di balik peran seorang guru.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div onclick="toggleCard(this)" class="cursor-pointer group bg-amber-50/50 hover:bg-amber-50 rounded-3xl p-6 border border-amber-200/60 transition-all duration-300 hover:shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                        <i data-lucide="compass" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Kompas Moral</h3>
+                    <p class="text-sm text-slate-600 card-preview">Menunjukkan arah saat kami tersesat dalam kebingungan...</p>
+                    <p class="text-sm text-amber-900 font-medium mt-3 pt-3 border-t border-amber-200 hidden card-detail">
+                        "Ilmu tanpa adab adalah hampa. Terima kasih telah mengajarkan kami cara menjadi manusia yang berempati dan jujur."
+                    </p>
+                </div>
+
+                <!-- Card 2 -->
+                <div onclick="toggleCard(this)" class="cursor-pointer group bg-emerald-50/50 hover:bg-emerald-50 rounded-3xl p-6 border border-emerald-200/60 transition-all duration-300 hover:shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                        <i data-lucide="sprout" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Penumbuh Harapan</h3>
+                    <p class="text-sm text-slate-600 card-preview">Merawat benih rasa ingin tahu hingga tumbuh mekar...</p>
+                    <p class="text-sm text-emerald-900 font-medium mt-3 pt-3 border-t border-emerald-200 hidden card-detail">
+                        "Setiap pertanyaan sederhana yang kami ajukan selalu dijawab dengan senyuman yang membesarkan hati."
+                    </p>
+                </div>
+
+                <!-- Card 3 -->
+                <div onclick="toggleCard(this)" class="cursor-pointer group bg-sky-50/50 hover:bg-sky-50 rounded-3xl p-6 border border-sky-200/60 transition-all duration-300 hover:shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-600 text-white flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Pelindung Mimpi</h3>
+                    <p class="text-sm text-slate-600 card-preview">Menjaga semangat kami tetap menyala di saat gagal...</p>
+                    <p class="text-sm text-sky-900 font-medium mt-3 pt-3 border-t border-sky-200 hidden card-detail">
+                        "Ketika nilai kami jatuh, engkau tidak menghakimi, melainkan mengulurkan tangan untuk bangkit kembali."
+                    </p>
+                </div>
+
+                <!-- Card 4 -->
+                <div onclick="toggleCard(this)" class="cursor-pointer group bg-rose-50/50 hover:bg-rose-50 rounded-3xl p-6 border border-rose-200/60 transition-all duration-300 hover:shadow-lg">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-500 text-white flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                        <i data-lucide="heart-handshake" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="font-serif text-xl font-bold text-slate-900 mb-2">Cinta Tanpa Pamrih</h3>
+                    <p class="text-sm text-slate-600 card-preview">Memberi sepenuh hati tanpa mengharap balas jasa...</p>
+                    <p class="text-sm text-rose-900 font-medium mt-3 pt-3 border-t border-rose-200 hidden card-detail">
+                        "Kebahagiaan terbesarmu hanyalah melihat murid-muridmu melampaui pencapaianmu sendiri."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Generator Ucapan & Kumpulan Kutipan -->
+    <section id="ucapan" class="py-16 px-4 sm:px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+                <div>
+                    <h2 class="font-serif text-3xl font-bold text-slate-900 mb-2">Untaian Ucapan Indah untuk Pak Syamsul</h2>
+                    <p class="text-slate-600 text-sm sm:text-base">Kumpulan ucapan penuh rasa hormat dan terima kasih yang dipersembahkan khusus untuk Pak Syamsul.</p>
+                </div>
+                
+                <!-- Filter Kategori -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="filterQuotes('semua', this)" class="quote-filter-btn active px-4 py-2 rounded-full text-xs font-semibold bg-slate-900 text-white transition-all">Semua</button>
+                    <button onclick="filterQuotes('menyentuh', this)" class="quote-filter-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 transition-all">Menyentuh Hati</button>
+                    <button onclick="filterQuotes('singkat', this)" class="quote-filter-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 transition-all">Singkat &amp; Elegan</button>
+                    <button onclick="filterQuotes('islami', this)" class="quote-filter-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 transition-all">Doa &amp; Berkah</button>
+                </div>
+            </div>
+
+            <!-- Grid Ucapan -->
+            <div id="quotes-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Diisi oleh JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Kartu Ucapan Siap Pakai Khusus Pak Syamsul -->
+    <section id="buat-kartu" class="py-16 px-4 sm:px-6 bg-gradient-to-b from-amber-50/50 to-amber-100/50 border-t border-amber-200/60">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <h2 class="font-serif text-3xl font-bold text-slate-900 mb-3">Kartu Spesial untuk Pak Syamsul</h2>
+                <p class="text-slate-600 text-sm sm:text-base">Pilih gaya ucapan indah yang sudah disiapkan untuk Pak Syamsul, lalu salin atau kirim langsung ke WhatsApp.</p>
+            </div>
+
+            <!-- Pilihan Preset Ucapan Indah untuk Pak Syamsul -->
+            <div class="flex flex-wrap items-center justify-center gap-2.5 mb-8">
+                <button onclick="selectPresetCard(0, this)" class="preset-btn px-4 py-2 rounded-full text-xs font-semibold bg-amber-600 text-white shadow-sm transition-all">
+                    1. Pelita &amp; Teladan
+                </button>
+                <button onclick="selectPresetCard(1, this)" class="preset-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-amber-200 hover:bg-amber-50 transition-all">
+                    2. Kesabaran Tanpa Batas
+                </button>
+                <button onclick="selectPresetCard(2, this)" class="preset-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-amber-200 hover:bg-amber-50 transition-all">
+                    3. Doa Penuh Berkah
+                </button>
+                <button onclick="selectPresetCard(3, this)" class="preset-btn px-4 py-2 rounded-full text-xs font-semibold bg-white text-slate-700 border border-amber-200 hover:bg-amber-50 transition-all">
+                    4. Bait Puisi Singkat
+                </button>
+            </div>
+
+            <!-- Kartu Utama Pak Syamsul -->
+            <div class="max-w-3xl mx-auto">
+                <div id="custom-card-preview" class="bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 text-white p-8 sm:p-12 rounded-3xl shadow-2xl relative overflow-hidden border border-amber-500/30">
+                    <!-- Ornamen Emas -->
+                    <div class="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl"></div>
+                    <div class="absolute top-6 right-8 text-amber-400/20">
+                        <i data-lucide="quote" class="w-16 h-16"></i>
+                    </div>
+
+                    <div class="relative z-10">
+                        <span class="inline-block px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold tracking-wider uppercase mb-6 border border-amber-500/30">
+                            Selamat Hari Guru Nasional
+                        </span>
+                        
+                        <h3 class="font-serif text-2xl sm:text-3xl font-bold text-amber-100 mb-4">
+                            Untuk <span id="preview-teacher" class="text-amber-400 underline decoration-amber-500/50 underline-offset-4">Pak Syamsul</span>,
+                        </h3>
+                        
+                        <p id="preview-message" class="text-slate-200 text-base sm:text-lg leading-relaxed mb-8 font-light italic">
+                            "Selamat Hari Guru, Pak Syamsul. Terima kasih atas ilmu, kesabaran, dan teladan yang selalu menyinari langkah kami. Semoga setiap kebaikan Pak Syamsul dibalas dengan keberkahan yang melimpah."
+                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6 border-t border-white/10">
+                            <div>
+                                <p class="text-xs text-slate-400">Dengan penuh hormat &amp; terima kasih,</p>
+                                <p id="preview-sender" class="font-semibold text-amber-300 text-sm sm:text-base mt-0.5">Murid-Murid yang Selalu Mengenang Jasa Pak Syamsul</p>
+                            </div>
+                            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 text-amber-200 border border-amber-400/30 text-xs sm:text-sm font-semibold">
+                                <i data-lucide="award" class="w-4 h-4 text-amber-300"></i>
+                                <span>Persembahan Khusus Hari Guru</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Halaman Konten 3: Halaman Renungan & Doa Hari Guru -->
+    <section id="renungan-hari-guru" class="py-16 px-4 sm:px-6 bg-white border-t border-amber-100">
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3">Halaman Doa &amp; Renungan</span>
+            <h2 class="font-serif text-3xl sm:text-4xl font-bold text-slate-900 mb-6">Doa Tulus Kami untuk Pak Syamsul</h2>
+            <div class="bg-amber-50/70 border border-amber-200/80 rounded-3xl p-8 sm:p-10 text-left space-y-4 text-slate-700 leading-relaxed text-sm sm:text-base shadow-sm">
+                <p>
+                    Di Hari Guru ini, kami menundukkan kepala dengan penuh rasa hormat dan syukur atas kehadiran <strong>Pak Syamsul</strong> dalam perjalanan pendidikan dan kehidupan kami.
+                </p>
+                <p>
+                    Ya Tuhan Yang Maha Pengasih, limpahkanlah kesehatan yang prima, umur yang penuh keberkahan, ketenangan hati, serta kebahagiaan yang berlimpah kepada Pak Syamsul dan keluarga tercinta.
+                </p>
+                <p>
+                    Jadikanlah setiap tetes ilmu, setiap kata nasihat, dan setiap keteladanan yang telah Pak Syamsul berikan sebagai cahaya kebaikan yang terus mengalir dan bernilai ibadah abadi. Aamiin ya Rabbal 'Alamin.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-10 px-4 border-t border-slate-200 text-center">
+        <div class="max-w-4xl mx-auto">
+            <p class="font-serif text-lg font-bold text-slate-800 mb-2">"Selamat Hari Guru, Pak Syamsul — jasamu terukir abadi di hati kami."</p>
+            <p class="text-xs text-slate-500">Halaman apresiasi khusus untuk Pak Syamsul.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Interaktif -->
+    <script>
+        // Helper aman untuk Lucide Icons (tidak menghentikan skrip jika CDN gagal)
+        function refreshIcons() {
+            try {
+                if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                    window.lucide.createIcons();
+                }
+            } catch (e) {
+                // Abaikan jika ikon belum termuat
+            }
+        }
+
+        // Helper aman untuk Confetti
+        function launchConfetti(opts) {
+            try {
+                if (typeof window.confetti === 'function') {
+                    window.confetti(opts);
+                }
+            } catch (e) {
+                // Abaikan jika confetti belum termuat
+            }
+        }
+
+        refreshIcons();
+
+        // 1. Sistem Notifikasi Toast (Pengganti alert)
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-x-full', 'opacity-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3500);
+        }
+
+        // 2. Efek Perayaan Confetti
+        function triggerCelebration() {
+            launchConfetti({
+                particleCount: 85,
+                spread: 75,
+                origin: { y: 0.6 },
+                colors: ['#f59e0b', '#d97706', '#10b981', '#ffffff']
+            });
+            showToast("Selamat Hari Guru, Pak Syamsul! Terima kasih atas segalanya.");
+        }
+
+        // 3. Tombol Kirim Bunga Virtual untuk Pak Syamsul
+        let flowerCount = 1248;
+        function sendVirtualFlower() {
+            flowerCount++;
+            const countEl = document.getElementById('flower-count');
+            if (countEl) {
+                countEl.textContent = flowerCount.toLocaleString('id-ID');
+            }
+
+            launchConfetti({
+                particleCount: 35,
+                spread: 50,
+                origin: { y: 0.7 },
+                shapes: ['circle'],
+                colors: ['#fb7185', '#f43f5e', '#fbbf24']
+            });
+            showToast("🌸 Bunga apresiasi telah dikirimkan khusus untuk Pak Syamsul!");
+        }
+
+        // Buka Kapsul Penghargaan Pak Syamsul
+        function revealCapsule(btn, title, body) {
+            if (!btn) return;
+            const badge = btn.querySelector('.capsule-badge');
+            const titleEl = btn.querySelector('.capsule-title');
+            const bodyEl = btn.querySelector('.capsule-body');
+
+            if (titleEl) titleEl.textContent = title;
+            if (bodyEl) {
+                bodyEl.textContent = body;
+                bodyEl.classList.remove('text-slate-500');
+                bodyEl.classList.add('text-slate-700', 'font-medium');
+            }
+            if (badge) badge.textContent = 'Terbuka';
+
+            btn.classList.remove('border-dashed');
+            btn.classList.add('border-solid', 'ring-2', 'ring-amber-300');
+
+            launchConfetti({
+                particleCount: 25,
+                spread: 45,
+                origin: { y: 0.75 },
+                colors: ['#f59e0b', '#10b981']
+            });
+            showToast("✨ Kapsul penghargaan untuk Pak Syamsul telah dibuka!");
+        }
+
+        // 4. Toggle Kartu Empat Pilar
+        function toggleCard(cardEl) {
+            if (!cardEl) return;
+            const preview = cardEl.querySelector('.card-preview');
+            const detail = cardEl.querySelector('.card-detail');
+            if (!detail) return;
+
+            const isHidden = detail.classList.contains('hidden');
+            if (isHidden) {
+                detail.classList.remove('hidden');
+                if (preview) preview.classList.add('hidden');
+                cardEl.classList.add('ring-2', 'ring-amber-300');
+                showToast("Makna ketulusan guru terbuka!");
+            } else {
+                detail.classList.add('hidden');
+                if (preview) preview.classList.remove('hidden');
+                cardEl.classList.remove('ring-2', 'ring-amber-300');
+            }
+        }
+
+        // 5. Data Kumpulan Ucapan Indah Khusus Pak Syamsul & Filter
+        const quotesData = [
+            {
+                category: 'menyentuh',
+                tag: 'Menyentuh Hati',
+                text: 'Selamat Hari Guru, Pak Syamsul. Terima kasih telah membimbing kami dengan penuh kesabaran dan ketulusan. Setiap nasihat Pak Syamsul akan selalu menjadi pegangan hidup kami.'
+            },
+            {
+                category: 'singkat',
+                tag: 'Singkat & Elegan',
+                text: 'Selamat Hari Guru untuk Pak Syamsul! Terima kasih telah menjadi pelita ilmu dan teladan terbaik bagi kami.'
+            },
+            {
+                category: 'islami',
+                tag: 'Doa & Berkah',
+                text: 'Semoga setiap ilmu yang Pak Syamsul ajarkan menjadi amal jariyah yang mengalir tanpa henti. Semoga Pak Syamsul selalu sehat, bahagia, dan dalam lindungan Allah SWT.'
+            },
+            {
+                category: 'menyentuh',
+                tag: 'Menyentuh Hati',
+                text: 'Di balik setiap langkah maju yang kami raih, ada jejak bimbingan dan doa dari Pak Syamsul. Terima kasih tak terhingga, Pak Syamsul.'
+            },
+            {
+                category: 'singkat',
+                tag: 'Singkat & Elegan',
+                text: 'Guru hebat mengukir masa depan dengan hati. Selamat Hari Guru, Pak Syamsul—terima kasih atas segala dedikasinya.'
+            },
+            {
+                category: 'islami',
+                tag: 'Doa & Berkah',
+                text: 'Barakallahu fiikum, Pak Syamsul. Semoga Allah membalas setiap keikhlasan dan lelah Pak Syamsul dengan kesehatan prima serta keberkahan hidup yang luas.'
+            }
+        ];
+
+        function renderQuotes(filter = 'semua') {
+            const container = document.getElementById('quotes-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const filtered = filter === 'semua'
+                ? quotesData
+                : quotesData.filter(q => q.category === filter);
+
+            filtered.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-4';
+                card.innerHTML = `
+                    <div>
+                        <span class="inline-block px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 text-[11px] font-bold uppercase tracking-wide mb-3">
+                            ${item.tag}
+                        </span>
+                        <p class="text-slate-700 text-sm sm:text-base leading-relaxed">"${item.text}"</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+                        <span>Untuk Pak Syamsul</span>
+                        <span class="font-semibold text-amber-700">Selamat Hari Guru</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            refreshIcons();
+        }
+
+        function filterQuotes(category, btnEl) {
+            document.querySelectorAll('.quote-filter-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-900', 'text-white');
+                btn.classList.add('bg-white', 'text-slate-700');
+            });
+            if (btnEl) {
+                btnEl.classList.remove('bg-white', 'text-slate-700');
+                btnEl.classList.add('bg-slate-900', 'text-white');
+            }
+
+            renderQuotes(category);
+        }
+
+        // 6. Kartu Spesial Pak Syamsul (Pilihan Ucapan Indah Siap Pakai)
+        const presetCards = [
+            {
+                teacher: 'Pak Syamsul',
+                message: '"Selamat Hari Guru, Pak Syamsul. Terima kasih atas ilmu, kesabaran, dan teladan yang selalu menyinari langkah kami. Semoga setiap kebaikan Pak Syamsul dibalas dengan keberkahan yang melimpah."',
+                sender: 'Murid-Murid yang Selalu Mengenang Jasa Pak Syamsul'
+            },
+            {
+                teacher: 'Pak Syamsul',
+                message: '"Terima kasih telah membimbing kami dengan penuh kesabaran di setiap proses belajar. Sosok Pak Syamsul adalah inspirasi nyata tentang arti ketulusan dan keteguhan hati."',
+                sender: 'Dengan Rasa Hormat & Terima Kasih'
+            },
+            {
+                teacher: 'Pak Syamsul',
+                message: '"Selamat Hari Guru, Pak Syamsul. Semoga Allah senantiasa melimpahkan kesehatan, umur panjang penuh berkah, ketenangan jiwa, serta kebahagiaan tiada henti kepada Pak Syamsul sekeluarga."',
+                sender: 'Doa Tulus dari Kami Semua'
+            },
+            {
+                teacher: 'Pak Syamsul',
+                message: '"Di papan ilmu terukir makna,\nDari tuturan yang penuh wibawa.\nSelamat Hari Guru, Pak Syamsul tercinta,\nJasamu abadi sepanjang masa."',
+                sender: 'Salam Takzim untuk Pak Syamsul'
+            }
+        ];
+
+        function selectPresetCard(index, btnEl) {
+            const preset = presetCards[index] || presetCards[0];
+            const teacherEl = document.getElementById('preview-teacher');
+            const msgEl = document.getElementById('preview-message');
+            const senderEl = document.getElementById('preview-sender');
+
+            if (teacherEl) teacherEl.textContent = preset.teacher;
+            if (msgEl) msgEl.textContent = preset.message;
+            if (senderEl) senderEl.textContent = preset.sender;
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'text-white', 'shadow-sm');
+                btn.classList.add('bg-white', 'text-slate-700', 'border', 'border-amber-200');
+            });
+            if (btnEl) {
+                btnEl.classList.remove('bg-white', 'text-slate-700', 'border', 'border-amber-200');
+                btnEl.classList.add('bg-amber-600', 'text-white', 'shadow-sm');
+            }
+            showToast("Kartu ucapan untuk Pak Syamsul diperbarui!");
+        }
+
+        // 7. Fitur Baca Surat dengan Suara (Web Speech API)
+        function readLetterAloud() {
+            const letterEl = document.getElementById('letter-content');
+            if (!letterEl) return;
+
+            if (!('speechSynthesis' in window)) {
+                showToast("Browser Anda tidak mendukung fitur pembaca suara otomatis.");
+                return;
+            }
+
+            try {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(letterEl.innerText);
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.95;
+                window.speechSynthesis.speak(utterance);
+                showToast("🔊 Membacakan surat untuk Pak Syamsul...");
+            } catch (err) {
+                showToast("Tidak dapat memutar pembaca suara saat ini.");
+            }
+        }
+
+        // 8. Pemutar Melodi Instrumental Menggunakan Tone.js (Bisa Ganti Nada)
+        let isPlaying = false;
+        let synth = null;
+        let melodyPart = null;
+        let currentMelodyIndex = 0;
+
+        // Melodi pembuka Hymne Guru ("Terpujilah wahai engkau ibu bapak guru...")
+        const hymneNotes = [
+            { time: '0:0', note: 'G4', duration: '4n' },
+            { time: '0:1', note: 'E4', duration: '4n' },
+            { time: '0:2', note: 'F4', duration: '4n' },
+            { time: '0:3', note: 'G4', duration: '2n' },
+            { time: '1:1', note: 'C5', duration: '4n' },
+            { time: '1:2', note: 'B4', duration: '4n' },
+            { time: '1:3', note: 'A4', duration: '4n' },
+            { time: '2:0', note: 'G4', duration: '2n.' },
+
+            { time: '3:0', note: 'A4', duration: '4n' },
+            { time: '3:1', note: 'G4', duration: '4n' },
+            { time: '3:2', note: 'F4', duration: '4n' },
+            { time: '3:3', note: 'E4', duration: '2n' },
+            { time: '4:1', note: 'D4', duration: '4n' },
+            { time: '4:2', note: 'E4', duration: '4n' },
+            { time: '4:3', note: 'F4', duration: '4n' },
+            { time: '5:0', note: 'D4', duration: '2n.' },
+
+            { time: '6:0', note: 'G4', duration: '4n' },
+            { time: '6:1', note: 'E4', duration: '4n' },
+            { time: '6:2', note: 'F4', duration: '4n' },
+            { time: '6:3', note: 'G4', duration: '2n' },
+            { time: '7:1', note: 'C5', duration: '4n' },
+            { time: '7:2', note: 'D5', duration: '4n' },
+            { time: '7:3', note: 'E5', duration: '4n' },
+            { time: '8:0', note: 'D5', duration: '2n' },
+            { time: '8:2', note: 'C5', duration: '2n' }
+        ];
+
+        // Melodi kedua: Nada lembut penuh syukur & ketenangan
+        const gratitudeNotes = [
+            { time: '0:0', note: 'C4', duration: '2n' },
+            { time: '0:2', note: 'E4', duration: '4n' },
+            { time: '0:3', note: 'G4', duration: '4n' },
+            { time: '1:0', note: 'A4', duration: '2n' },
+            { time: '1:2', note: 'G4', duration: '2n' },
+
+            { time: '2:0', note: 'F4', duration: '2n' },
+            { time: '2:2', note: 'A4', duration: '4n' },
+            { time: '2:3', note: 'C5', duration: '4n' },
+            { time: '3:0', note: 'B4', duration: '2n' },
+            { time: '3:2', note: 'G4', duration: '2n' },
+
+            { time: '4:0', note: 'A4', duration: '2n' },
+            { time: '4:2', note: 'F4', duration: '4n' },
+            { time: '4:3', note: 'E4', duration: '4n' },
+            { time: '5:0', note: 'D4', duration: '2n' },
+            { time: '5:2', note: 'G4', duration: '2n' },
+
+            { time: '6:0', note: 'E4', duration: '2n' },
+            { time: '6:2', note: 'G4', duration: '4n' },
+            { time: '6:3', note: 'A4', duration: '4n' },
+            { time: '7:0', note: 'G4', duration: '1n' }
+        ];
+
+        const melodies = [
+            { name: 'Hymne Guru (Piano)', notes: hymneNotes, loopEnd: '9:2', bpm: 76 },
+            { name: 'Syukur & Hormat (Lembut)', notes: gratitudeNotes, loopEnd: '8:0', bpm: 72 }
+        ];
+
+        function updateMusicUI(playing) {
+            const icon = document.getElementById('music-icon');
+            const status = document.getElementById('music-status');
+            const eq = document.getElementById('equalizer');
+
+            if (icon) {
+                icon.setAttribute('data-lucide', playing ? 'pause' : 'play');
+            }
+            if (status) {
+                status.textContent = playing ? 'Sedang memainkan...' : 'Melodi dijeda';
+            }
+            if (eq) {
+                if (playing) {
+                    eq.classList.remove('hidden');
+                    eq.classList.add('flex');
+                } else {
+                    eq.classList.add('hidden');
+                    eq.classList.remove('flex');
+                }
+            }
+            refreshIcons();
+        }
+
+        function ensureSynth() {
+            if (!window.Tone) return false;
+            if (!synth) {
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: {
+                        attack: 0.08,
+                        decay: 0.3,
+                        sustain: 0.4,
+                        release: 1.2
+                    }
+                }).toDestination();
+                synth.volume.value = -8;
+            }
+            return true;
+        }
+
+        function buildMelodyPart() {
+            if (!ensureSynth()) return;
+            if (melodyPart) {
+                melodyPart.stop();
+                melodyPart.dispose();
+            }
+            const activeMelody = melodies[currentMelodyIndex];
+            const titleEl = document.getElementById('music-title');
+            if (titleEl) titleEl.textContent = activeMelody.name;
+
+            Tone.Transport.bpm.value = activeMelody.bpm;
+            melodyPart = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.note, value.duration, time);
+            }, activeMelody.notes);
+
+            melodyPart.loop = true;
+            melodyPart.loopEnd = activeMelody.loopEnd;
+            melodyPart.start(0);
+        }
+
+        function switchMelody() {
+            currentMelodyIndex = (currentMelodyIndex + 1) % melodies.length;
+            const activeMelody = melodies[currentMelodyIndex];
+            const titleEl = document.getElementById('music-title');
+            if (titleEl) titleEl.textContent = activeMelody.name;
+
+            if (!window.Tone) {
+                showToast(`🎵 Melodi dipilih: ${activeMelody.name}`);
+                return;
+            }
+
+            Promise.resolve()
+                .then(() => Tone.start())
+                .then(() => {
+                    buildMelodyPart();
+                    if (!isPlaying) {
+                        Tone.Transport.start();
+                        isPlaying = true;
+                    }
+                    updateMusicUI(true);
+                    showToast(`🎵 Melodi diganti ke: ${activeMelody.name}`);
+                })
+                .catch(() => {
+                    showToast(`🎵 Melodi dipilih: ${activeMelody.name}`);
+                });
+        }
+
+        function toggleMusic() {
+            if (!window.Tone) {
+                isPlaying = !isPlaying;
+                updateMusicUI(isPlaying);
+                showToast(isPlaying ? "🎵 Melodi aktif" : "Melodi dijeda");
+                return;
+            }
+
+            if (!isPlaying) {
+                isPlaying = true;
+                updateMusicUI(true);
+
+                Promise.resolve()
+                    .then(() => Tone.start())
+                    .then(() => {
+                        if (!synth || !melodyPart) {
+                            buildMelodyPart();
+                        }
+                        Tone.Transport.start();
+                    })
+                    .catch(() => {
+                        showToast("Ketuk sekali lagi untuk mengizinkan suara.");
+                    });
+            } else {
+                try {
+                    Tone.Transport.pause();
+                } catch (e) {}
+                isPlaying = false;
+                updateMusicUI(false);
+            }
+        }
+
+        // Render awal daftar ucapan saat halaman dimuat
+        renderQuotes('semua');
+        window.addEventListener('DOMContentLoaded', () => {
+            renderQuotes('semua');
+            refreshIcons();
+        });
+    </script>
+</body>
+</html>
+
+```
